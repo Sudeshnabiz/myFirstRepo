@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:smb="http://www.mulesoft.org/schema/mule/smb"
+	xmlns:oauth="http://www.mulesoft.org/schema/mule/oauth"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:sharepoint="http://www.mulesoft.org/schema/mule/sharepoint" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd 
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sharepoint http://www.mulesoft.org/schema/mule/sharepoint/current/mule-sharepoint.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/oauth http://www.mulesoft.org/schema/mule/oauth/current/mule-oauth.xsd
+http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/current/mule-smb.xsd">
+		<sharepoint:sharepoint-online-config name="Sharepoint_Sharepoint_online" doc:name="Sharepoint Sharepoint online" doc:id="34e35fc3-99ae-4819-869c-9c7c97057776" >
+		<sharepoint:oauth-client-credentials-connection siteUrl='#[vars."target-sharepoint-site"]' clientId='#[vars."target-sharepoint-clientid"]' tokenUrl='#[vars."target-sharepoint-tokenurl"]' scope='#[vars."target-sharepoint-scope"]' keyStoreAlias='#[vars."target-sharepoint-keystorealias"]' keyStorePath='#[vars."target-sharepoint-keystorepath"]' keyStorePassword='#[vars."target-sharepoint-keystorepassword"]' keyStoreType='JKS'>
+			<reconnection >
+				<reconnect />
+			</reconnection>
+		</sharepoint:oauth-client-credentials-connection>
+	</sharepoint:sharepoint-online-config>
+
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="3d83f464-0db1-4df7-b91b-80bdd24cd161" >
+		<vm:queues >
+			<vm:queue queueName="vm-sftp-to-sharepoint" />
+			<vm:queue queueName="vm-sftp-to-sftp" />
+			<vm:queue queueName="vm-sftp-to-aws" />
+			<vm:queue queueName="vm-sftp-to-sftp-ssh" />
+			<vm:queue queueName="vm-onedrive-to-sharepoint" />
+			<vm:queue queueName="vm-networkdrive-to-sharepoint" />
+		</vm:queues>
+	</vm:config>
+	<sftp:config name="SFTP_Source_Config" doc:name="SFTP Config" doc:id="c7abf591-b537-4fcb-ab25-30fe5a8434be" >
+		<sftp:connection host='#[vars."source-sftp-host"]' username='#[vars."source-sftp-username"]' password='#[vars."source-sftp-password"]' port='#[vars."source-sftp-port"]'>
+			<reconnection >
+				<reconnect />
+			</reconnection>
+		</sftp:connection>
+	</sftp:config>
+	<sftp:config name="SFTP_Target_Config" doc:name="SFTP Config" doc:id="2e37d590-fcd2-4049-b187-e7ef250156fe" >
+		<sftp:connection host='#[vars."target-sftp-host"]' username='#[vars."target-sftp-username"]' password='#[vars."target-sftp-password"]' port='#[vars."target-sftp-port"]'>
+			<reconnection >
+				<reconnect />
+			</reconnection>
+		</sftp:connection>
+	</sftp:config>
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="2ee9b555-b667-48d7-8890-83dc0c366933" >
+		<s3:connection accessKey='#[vars."target-aws-accesskey"]' secretKey='#[vars."target-aws-secretkey"]' region='#[vars."target-aws-region"]' >
+			<reconnection >
+				<reconnect />
+			</reconnection>
+		</s3:connection>
+	</s3:config>
+	<sftp:config name="SFTP_SSH_Target_Config" doc:name="SFTP Config" doc:id="1cf2be26-d1ab-47e2-ba4d-124c7ef98fef" >
+		<sftp:connection host='#[vars."target-sftp-host"]' username='#[vars."target-sftp-username"]' identityFile='#[vars."target-sftp-identityfile"]' passphrase='#[vars."target-sftp-passphrase"]' port='#[vars."target-sftp-port"]'>
+			<reconnection >
+				<reconnect />
+			</reconnection>
+		</sftp:connection>
+	</sftp:config>
+	<http:request-config name="HTTP_Source_OneDrive_Graph" doc:name="HTTP Request configuration" doc:id="3f3ac6f4-f23d-48e1-9529-e2a604ecec03" >
+		<http:request-connection protocol="HTTPS" host="graph.microsoft.com" port="443" >
+			<http:authentication >
+				<oauth:client-credentials-grant-type clientId='#[vars."source-onedrive-clientid"]' clientSecret='#[vars."source-onedrive-clientsecret"]' scopes='#[vars."source-onedrive-scope"]' tokenUrl='#["https://login.microsoftonline.com/" ++ vars."source-onedrive-tenant" ++ "/oauth2/v2.0/token"]' >
+					<oauth:token-manager objectStore="Object_store_onedrive" />
+				</oauth:client-credentials-grant-type>
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+	<http:request-config name="HTTP_Source_OneDrive_Download" doc:name="HTTP Request configuration" doc:id="c909737d-92a9-4eb6-8af3-d280af1f8404" >
+		<http:request-connection protocol="HTTPS" host="#[vars.downloadhost]" port="443" />
+	</http:request-config>
+	<os:config name="ObjectStore_Config_OneDrive" doc:name="ObjectStore Config" doc:id="f97fdb1a-c2f5-4371-8672-3b7ad7c784b4" >
+		<os:connection >
+			<reconnection >
+				<reconnect />
+			</reconnection>
+		</os:connection>
+	</os:config>
+	<os:object-store name="Object_store_onedrive" doc:name="Object store" doc:id="49ff9e6f-e1ee-4feb-b252-ac1f13ca4e12" maxEntries="100000" entryTtl="3500" config-ref="ObjectStore_Config_OneDrive" />
+	<smb:config name="SMB_Connector_Config" doc:name="SMB Connector Config" doc:id="a55814e1-6449-48b9-a004-f921a5dc04f1" >
+		<smb:connection host='#[vars."source-networkdrive-host"]' share='#[vars."source-networkdrive-share"]' username='#[vars."source-networkdrive-username"]' password='#[vars."source-networkdrive-password"]'/>
+	</smb:config>
+</mule>

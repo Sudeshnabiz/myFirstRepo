@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:sharepoint="http://www.mulesoft.org/schema/mule/sharepoint"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:custom-metrics="http://www.mulesoft.org/schema/mule/custom-metrics" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/custom-metrics http://www.mulesoft.org/schema/mule/custom-metrics/current/mule-custom-metrics.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/sharepoint http://www.mulesoft.org/schema/mule/sharepoint/current/mule-sharepoint.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="35e79184-7fd0-4cac-a0b1-721c202e4a74" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="sftp-to-sftp-main" doc:id="29081cd2-9d61-47a7-bba9-bfc9aa363ba7" initialState="stopped">
+		<vm:listener doc:name="Listener" doc:id="6f508962-6a02-433a-9d6a-8ac7e822bc8b" queueName="vm-sftp-to-sftp" config-ref="VM_Config"/>
+		<ee:transform doc:name="SFTP to SFTP Vars Initialization" doc:id="184a8fd9-6ed2-4a24-bc4d-4910731c8cfd">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="archive-location"><![CDATA[%dw 2.0
+output application/java
+---
+payload."archive-location"]]></ee:set-variable>
+				<ee:set-variable variableName="interface-name"><![CDATA[%dw 2.0
+output application/java
+---
+payload."interface-name"]]></ee:set-variable>
+				<ee:set-variable variableName="error-location"><![CDATA[%dw 2.0
+output application/java
+---
+payload."error-location"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-host" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-host"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-port" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-port"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-username" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-username"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-password" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-password"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-file-pattern" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-file-pattern"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-path" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-path"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-host" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-host"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-port" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-port"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-username" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-username"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-password" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-password"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-path" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-path"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-fileformat" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-fileformat"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<sftp:list doc:name="List" doc:id="dab6caa8-f38c-40ac-8fd1-3f8239498b6d" config-ref="SFTP_Source_Config" directoryPath='#[vars."source-sftp-path"]' target="listFiles">
+			<sftp:matcher directories="EXCLUDE" />
+		</sftp:list>
+		<ee:transform doc:name="Initialize vars used for metrics" doc:id="d7c39840-6c6f-4e64-83f8-c3642919fd27">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="total-input-files"><![CDATA[%dw 2.0
+output application/java
+---
+0				]]></ee:set-variable>
+				<ee:set-variable variableName="total-success-files"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+				<ee:set-variable variableName="total-error-files"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+				<ee:set-variable variableName="total-size-files" ><![CDATA[%dw 2.0
+output application/json
+---
+0]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="For Each File - Flow Reference" doc:id="f7bfaff3-6cef-456a-9177-38f1df5efc63" name="sftp-to-sftp-for-each" />
+		<custom-metrics:send doc:name="Send File Transfer Metrics" doc:id="ae25b5d3-2e23-4aa4-bf6d-70e605ab917d" metricName="file_transfers_custom_metric">
+			<custom-metrics:dimensions>
+				<custom-metrics:dimension dimensionName="interface_name" value='#[vars."interface-name"]' />
+			</custom-metrics:dimensions>
+			<custom-metrics:facts>
+				<custom-metrics:fact factName="total-input-files" value='#[vars."total-input-files"]' />
+						<custom-metrics:fact factName="total-error-files" value='#[vars."total-error-files"]' />
+				<custom-metrics:fact factName="total-success-files" value='#[vars."total-success-files"]' />
+				<custom-metrics:fact factName="total-size-files" value='#[vars."total-size-files"]' />
+			</custom-metrics:facts>
+		</custom-metrics:send>
+		<choice doc:name="Choice" doc:id="aaeb5418-2779-40f2-8cca-39cff041a1b0">
+			<when expression='#[vars."total-error-files" &gt; 0]'>
+				<set-payload value="Error" doc:name="Set Response" doc:id="bb01e31c-3532-4e43-9934-204e1571b78a" />
+			</when>
+			<otherwise>
+				<set-payload value="Success" doc:name="Set Response" doc:id="28fb3f33-f190-462a-bd38-d3b8d2913477" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="sftp-to-sftp-for-each" doc:id="af6e26e2-0e19-4768-8d38-a4824dc07147" initialState="stopped">
+		<foreach collection="#[vars.listFiles]">
+			<sftp:read doc:name="Read" doc:id="12a6b939-a528-40a2-bfd8-2d2bca085b2b" config-ref="SFTP_Source_Config" path="#[vars.listFiles[vars.counter - 1].attributes.path]" />
+			<choice>
+				<when expression="#[not attributes.directory]">
+					<ee:transform doc:name="Determine Current DateTime" doc:id="38b82e22-4669-4dcb-a889-04427eae8b10">
+						<ee:message>
+						</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="currDateTime" ><![CDATA[%dw 2.0
+var myDateTime = now()
+output application/json
+---
+{
+    "YYYY" : myDateTime as String {format: "u"},
+    "MM": myDateTime as String { format: "MM"},
+    "DD" : myDateTime as String {format: "dd"},
+    "hh" : myDateTime as String {format: "HH"},
+    "mm" : myDateTime as String {format: "mm"},
+    "ss" : myDateTime as String {format: "ss"},
+}]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<ee:transform doc:name="File Transfer Internal Variables" doc:id="7405ed1a-b1ac-400e-9b89-13132b2f773d">
+						<ee:variables>
+							<ee:set-variable variableName="target-path" ><![CDATA[%dw 2.0
+output application/java
+fun calculateDateTime(aString) = aString replace '[YYYY]' with (vars.currDateTime.YYYY) replace '[DD]' with (vars.currDateTime.DD) replace '[MM]' with (vars.currDateTime.MM) replace '[hh]' with (vars.currDateTime.hh) replace '[mm]' with (vars.currDateTime.mm) replace '[ss]' with (vars.currDateTime.ss)
+---
+if(sizeOf(vars."target-sftp-fileformat") > 0)
+vars."target-sftp-path" ++ calculateDateTime(vars."target-sftp-fileformat")
+else
+vars."target-sftp-path" ++ vars.listFiles[vars.counter - 1].attributes.fileName]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<sftp:write doc:name="Write" doc:id="9f70799d-cfb6-4679-9cb5-871603f6efce" config-ref="SFTP_Target_Config" path='#[vars."target-path"]'/>
+					<set-variable value='#[vars."total-success-files" + 1]' doc:name="Set Total Success Files" doc:id="efef30a5-53ad-47ca-b23c-ea2621f2da35" variableName="total-success-files"/>
+					<set-variable value='#[vars."total-input-files" + 1]' doc:name="Set Total Input Files" doc:id="658a278c-d963-4319-ac15-e8720a626513" variableName="total-input-files"/>
+					<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars."total-size-files" + (sizeOf(payload.^raw)/1000000)]' doc:name="Set Total Files Size" doc:id="60a1c648-df40-430f-9872-18dcc74680ea" variableName="total-size-files"/>
+        </when>
+    </choice>
+</foreach>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="eb8aaea3-599c-4209-8e4d-ed9719f0fe0a" >
+				<set-variable value='#[vars."total-input-files" + 1]' doc:name="Set Total Input Files Count" doc:id="e7ac540c-db44-4b17-97a8-a976af81fa20" variableName="total-input-files"/>
+				<set-variable value='#[vars."total-error-files" + 1]' doc:name="Set Total Error Files" doc:id="260abc1b-c078-4b0f-b718-da8d6f20f4f0" variableName="total-error-files"/>
+				<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars."total-size-files" + (sizeOf(payload.^raw)/1000000)]' doc:name="Set Total File Size" doc:id="431a6a25-7170-4464-b0fc-01f8b90c987f" variableName="total-size-files"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="sftp-to-sftp-filter-based-on-file-extension-Sudeshna" doc:id="2c684bb8-ee72-4629-b64c-9e3456a214d2" >
+		<http:listener doc:name="Listener" doc:id="b658cbdf-4663-4ace-8455-a2f94e2c8c2f" config-ref="HTTP_Listener_config" path="/test"/>
+		<logger level="INFO" doc:name="Read-me-before-implementation" doc:id="47229dd9-6352-46de-9c7d-0161107a43e2" message='#["This flow would list the files in source directory,filter those files based on the required file extension,read it from the source folder and write it to the destination folder. Parameters required: sourceFilePath,destFilePath,file extension(presently hardcoded for test purpose and it filters .dd-mm-yyyy and dd/mm/yyyy format files)"]'/>
+		<ee:transform doc:name="Initialize Variables" doc:id="7d544719-5c6d-42ea-ae8b-3af50952d3c3">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="source-sftp-port" ><![CDATA[%dw 2.0
+output application/java
+---
+"22"]]></ee:set-variable>
+<ee:set-variable variableName="source-sftp-host" ><![CDATA[%dw 2.0
+output application/java
+---
+"10.22.5.38"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-username" ><![CDATA[%dw 2.0
+output application/java
+---
+"userftp"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-password" ><![CDATA[%dw 2.0
+output application/java
+---
+"userftp@123"]]></ee:set-variable>
+
+<ee:set-variable variableName="target-sftp-port" ><![CDATA[%dw 2.0
+output application/java
+---
+"22"]]></ee:set-variable>
+<ee:set-variable variableName="target-sftp-host" ><![CDATA[%dw 2.0
+output application/java
+---
+"10.22.5.38"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-username" ><![CDATA[%dw 2.0
+output application/java
+---
+"userftp"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-password" ><![CDATA[%dw 2.0
+output application/java
+---
+"userftp@123"]]></ee:set-variable>
+				<ee:set-variable variableName="sourceFilePath" ><![CDATA[%dw 2.0
+output application/java
+---
+"/app/sftp_data/mulesoft/source-directory/"]]></ee:set-variable>
+				
+			</ee:variables>
+		</ee:transform>
+		<sftp:list doc:id="87178cf3-9a3c-4a1d-ad74-80fd4f06df56" doc:name="" config-ref="SFTP_Source_Config" directoryPath="#[vars.sourceFilePath]"/>
+		<ee:transform doc:name="Transform Message" doc:id="bcb6c566-f80b-4171-8ec2-a573e7023088" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="fileExtension" ><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+---
+//payload.*attributes.name filter ((item, index) ->((item substringAfter ".") matches ("[0-9]{2}[-|\/]{1}[0-9]{2}[-|\/]{1}[0-9]{4}" as Regex)) )
+
+//We would add more file extensions as per requirement. Presently only dd-mm-yyyy files are filtered in this case
+//for other matches we can use *.{csv,json,xml,txt} in list file matching rules as well
+
+payload.*attributes.name filter ((item, index) -> (item substringAfter ".") matches ('\d{1,2}[-|\/|\S]\d{1,2}[-|\/|\S]\d{2,4}'))]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="c568906b-dc0c-47ea-9528-cd93d249d31a" collection="#[vars.fileExtension]">
+			<logger level="INFO" doc:name="Logger" doc:id="9903696c-a863-4ce6-b3ec-76896efa6af2" message='"inside for each"'/>
+			<logger level="INFO" doc:name="Logger" doc:id="cd583cf9-643d-4ca1-a8e4-37f76c408ae7" message="#[payload]"/>
+			<ee:transform doc:name="Transform Message" doc:id="3ffd64eb-d22f-4a2a-a9a2-7964e5a145c4" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="destFileName" ><![CDATA[%dw 2.0
+output application/json
+---
+"/app/sftp_data/mulesoft/destination-directory/" ++ payload]]></ee:set-variable>
+					<ee:set-variable variableName="sourceFileName" ><![CDATA[%dw 2.0
+output application/json
+---
+"/app/sftp_data/mulesoft/source-directory/" ++ payload]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<sftp:read doc:id="9088c661-afec-49c1-a5e4-d9402c7598d6" doc:name="" config-ref="SFTP_Source_Config" path="#[vars.sourceFileName]" />
+			<sftp:write doc:id="a57d74da-5e99-4a08-81ae-0421647329b7" doc:name="" config-ref="SFTP_Target_Config" path="#[vars.destFileName]" mode="CREATE_NEW" />
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="786a11ff-f1ee-4ac3-bb2c-704cb617cdaf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>	
+</mule>

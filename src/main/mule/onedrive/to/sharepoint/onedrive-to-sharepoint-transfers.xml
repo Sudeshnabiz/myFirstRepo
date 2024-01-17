@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:sharepoint="http://www.mulesoft.org/schema/mule/sharepoint"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:custom-metrics="http://www.mulesoft.org/schema/mule/custom-metrics" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/custom-metrics http://www.mulesoft.org/schema/mule/custom-metrics/current/mule-custom-metrics.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/sharepoint http://www.mulesoft.org/schema/mule/sharepoint/current/mule-sharepoint.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+
+	<flow name="onedrive-to-sharepoint-main" doc:id="29081cd2-9d61-47a7-bba9-bfc9aa363ba7">
+		<vm:listener doc:name="Listener" doc:id="6f508962-6a02-433a-9d6a-8ac7e822bc8b" queueName="vm-onedrive-to-sharepoint" config-ref="VM_Config"/>
+		<ee:transform doc:name="OneDrive to SharePoint Vars Initialization" doc:id="184a8fd9-6ed2-4a24-bc4d-4910731c8cfd">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="archive-location"><![CDATA[%dw 2.0
+output application/java
+---
+payload."archive-location"]]></ee:set-variable>
+				<ee:set-variable variableName="interface-name"><![CDATA[%dw 2.0
+output application/java
+---
+payload."interface-name"]]></ee:set-variable>
+				<ee:set-variable variableName="error-location"><![CDATA[%dw 2.0
+output application/java
+---
+payload."error-location"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-site" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-site"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-folder" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-folder"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-clientid" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-clientid"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-tokenurl" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-tokenurl"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-scope" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-scope"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-keystorealias" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-keystorealias"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-keystorepath" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-keystorepath"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-keystorepassword" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-keystorepassword"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-keystoretype" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-keystoretype"]]></ee:set-variable>
+				<ee:set-variable variableName="source-onedrive-tenant" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-onedrive-tenant"]]></ee:set-variable>
+				<ee:set-variable variableName="source-onedrive-clientid" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-onedrive-clientid"]]></ee:set-variable>
+				<ee:set-variable variableName="source-onedrive-clientsecret" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-onedrive-clientsecret"]]></ee:set-variable>
+				<ee:set-variable variableName="source-onedrive-scope" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-onedrive-scope"]]></ee:set-variable>
+				<ee:set-variable variableName="source-onedrive-userid" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-onedrive-userid"]]></ee:set-variable>
+				<ee:set-variable variableName="source-onedrive-driveid" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-onedrive-driveid"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<http:request method="GET" doc:name="Get Children from OneDrive" doc:id="9eb59b34-e429-4007-8c75-d07107f0b248" config-ref="HTTP_Source_OneDrive_Graph" path='#["/v1.0/users/" ++ vars."source-onedrive-userid" ++ "/drive/items/" ++ vars."source-onedrive-driveid" ++ "/children"]'/>
+		<ee:transform doc:name="Initialize vars used for metrics" doc:id="d7c39840-6c6f-4e64-83f8-c3642919fd27">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="total-input-files"><![CDATA[%dw 2.0
+output application/java
+---
+0
+				]]></ee:set-variable>
+				<ee:set-variable variableName="total-success-files"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+				<ee:set-variable variableName="total-error-files"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+				<ee:set-variable variableName="total-size-files" ><![CDATA[%dw 2.0
+output application/json
+---
+0]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="For Each File - Flow Reference" doc:id="f7bfaff3-6cef-456a-9177-38f1df5efc63" name="onedrive-to-sharepoint-for-each" />
+		<custom-metrics:send doc:name="Send File Transfer Metrics" doc:id="a40e421f-adba-4b49-93fc-489a08e32c6c" metricName="file_transfers_custom_metric">
+			<custom-metrics:dimensions>
+				<custom-metrics:dimension dimensionName="interface_name" value='#[vars."interface-name"]' />
+			</custom-metrics:dimensions>
+			<custom-metrics:facts>
+				<custom-metrics:fact factName="total-input-files" value='#[vars."total-input-files"]' />
+						<custom-metrics:fact factName="total-error-files" value='#[vars."total-error-files"]' />
+				<custom-metrics:fact factName="total-success-files" value='#[vars."total-success-files"]' />
+				<custom-metrics:fact factName="total-size-files" value='#[vars."total-size-files"]' />
+			</custom-metrics:facts>
+		</custom-metrics:send>
+		<choice doc:name="Choice" doc:id="aaeb5418-2779-40f2-8cca-39cff041a1b0">
+			<when expression='#[vars."total-error-files" &gt; 0]'>
+				<set-payload value="Error" doc:name="Set Response" doc:id="bb01e31c-3532-4e43-9934-204e1571b78a" />
+			</when>
+			<otherwise>
+				<set-payload value="Success" doc:name="Set Response" doc:id="28fb3f33-f190-462a-bd38-d3b8d2913477" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="onedrive-to-sharepoint-for-each" doc:id="af6e26e2-0e19-4768-8d38-a4824dc07147" >
+		<foreach collection="#[payload.value default []]">
+			<ee:transform doc:name="Set Vars for OneDrive Download" doc:id="7884bf4c-c5c0-4daf-ada2-5a3f6eb7b8d3" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="downloadhost" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/java
+---
+substringBefore(substringAfter(payload."@microsoft.graph.downloadUrl", "//"),"/")]]></ee:set-variable>
+					<ee:set-variable variableName="downloadpath" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/java
+---
+substringAfter(substringAfter(payload."@microsoft.graph.downloadUrl", "//"),"/")]]></ee:set-variable>
+					<ee:set-variable variableName="filename" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/java
+---
+payload."name"]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<http:request method="POST" doc:name="Download Content" doc:id="587d8a84-629d-4ebd-9491-ebd34cab0b1f" config-ref="HTTP_Source_OneDrive_Download" path="#['/' ++ vars.downloadpath]"/>
+			<ee:transform doc:name="File Transfer Internal Variables" doc:id="7405ed1a-b1ac-400e-9b89-13132b2f773d">
+						<ee:variables>
+							<ee:set-variable variableName="sharepoint-filename"><![CDATA[%dw 2.0
+output application/java
+---
+vars."target-sharepoint-folder" default "" ++ vars.filename]]></ee:set-variable>
+							<ee:set-variable variableName="source-file"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.path]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+			<sharepoint:file-add doc:name="Upload File to Sharepoint" doc:id="4e61a824-1a34-4045-9dd7-4c67631233d0" fileServerRelativeUrl='#[vars."sharepoint-filename"]' overwrite="true" config-ref="Sharepoint_Sharepoint_online" target="sharePointResponse">
+			<sharepoint:file-content-stream><![CDATA[#[payload]]]></sharepoint:file-content-stream>
+		</sharepoint:file-add>
+			<set-variable value='#[vars."total-success-files" + 1]' doc:name="Set Total Success Files" doc:id="34043cd8-f3ee-49d0-b673-769c9a4dd492" variableName="total-success-files"/>
+			<set-variable value='#[vars."total-input-files" + 1]' doc:name="Set Total Input Files" doc:id="f48d7da2-96d8-4c57-bf1c-6ded7950f563" variableName="total-input-files"/>
+			<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars."total-size-files" + (sizeOf(payload.^raw)/1000000)]' doc:name='Set Total Files Size' doc:id="cef37e0f-efc7-47e1-9373-666ddd314acf" variableName="total-size-files"/>
+</foreach>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="eb8aaea3-599c-4209-8e4d-ed9719f0fe0a" >
+				<set-variable value='#[vars."total-error-files" + 1]' doc:name="Set Total Error Files" doc:id="9c7258e3-19f1-4eec-ac95-4e0f3d04048f" variableName="total-error-files"/>
+				<set-variable value='#[vars."total-input-files" + 1]' doc:name="Set Total Input Files Count" doc:id="bb5807b6-e7e1-460d-bed4-8ac3c4be27a5" variableName="total-input-files"/>
+				<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars."total-size-files" + (sizeOf(payload.^raw)/1000000)]' doc:name="Set Total File Size" doc:id="33f5a4be-89b8-47b8-b605-ff7a2da37644" variableName="total-size-files"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>	
+</mule>

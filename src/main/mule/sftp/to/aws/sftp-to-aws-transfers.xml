@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:sharepoint="http://www.mulesoft.org/schema/mule/sharepoint" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:custom-metrics="http://www.mulesoft.org/schema/mule/custom-metrics" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/custom-metrics http://www.mulesoft.org/schema/mule/custom-metrics/current/mule-custom-metrics.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/sharepoint http://www.mulesoft.org/schema/mule/sharepoint/current/mule-sharepoint.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+	<flow name="sftp-to-aws-main" doc:id="29081cd2-9d61-47a7-bba9-bfc9aa363ba7">
+		<vm:listener doc:name="Listener" doc:id="6f508962-6a02-433a-9d6a-8ac7e822bc8b" queueName="vm-sftp-to-aws" config-ref="VM_Config"/>
+		<ee:transform doc:name="SFTP to AWS Vars Initialization" doc:id="184a8fd9-6ed2-4a24-bc4d-4910731c8cfd">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="archive-location"><![CDATA[%dw 2.0
+output application/java
+---
+payload."archive-location"]]></ee:set-variable>
+				<ee:set-variable variableName="interface-name"><![CDATA[%dw 2.0
+output application/java
+---
+payload."interface-name"]]></ee:set-variable>
+				<ee:set-variable variableName="error-location"><![CDATA[%dw 2.0
+output application/java
+---
+payload."error-location"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-host" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-host"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-port" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-port"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-username" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-username"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-password" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-password"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-file-pattern" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-file-pattern"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-path" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-path"]]></ee:set-variable>
+				<ee:set-variable variableName="target-aws-accesskey" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-aws-accesskey"]]></ee:set-variable>
+				<ee:set-variable variableName="target-aws-secretkey" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-aws-secretkey"]]></ee:set-variable>
+				<ee:set-variable variableName="target-aws-bucketname" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-aws-bucketname"]]></ee:set-variable>
+				<ee:set-variable variableName="target-aws-region" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-aws-region"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<sftp:list doc:name="List" doc:id="dab6caa8-f38c-40ac-8fd1-3f8239498b6d" config-ref="SFTP_Source_Config" directoryPath='#[vars."source-sftp-path"]' target="listFiles">
+			<sftp:matcher directories="EXCLUDE" />
+		</sftp:list>
+		<ee:transform doc:name="Initialize vars used for metrics" doc:id="d7c39840-6c6f-4e64-83f8-c3642919fd27">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="total-input-files"><![CDATA[%dw 2.0
+output application/java
+---
+0				]]></ee:set-variable>
+				<ee:set-variable variableName="total-success-files"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+				<ee:set-variable variableName="total-error-files"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+				<ee:set-variable variableName="total-size-files" ><![CDATA[%dw 2.0
+output application/json
+---
+0]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="For Each File - Flow Reference" doc:id="f7bfaff3-6cef-456a-9177-38f1df5efc63" name="sftp-to-aws-for-each" />
+		<custom-metrics:send doc:name="Send File Transfer Metrics" doc:id="be7f6984-3a3e-44da-8f93-5f127d9993e2" metricName="file_transfers_custom_metric">
+			<custom-metrics:dimensions>
+				<custom-metrics:dimension dimensionName="interface_name" value='#[vars."interface-name"]' />
+			</custom-metrics:dimensions>
+			<custom-metrics:facts>
+				<custom-metrics:fact factName="total-input-files" value='#[vars."total-input-files"]' />
+						<custom-metrics:fact factName="total-error-files" value='#[vars."total-error-files"]' />
+				<custom-metrics:fact factName="total-success-files" value='#[vars."total-success-files"]' />
+				<custom-metrics:fact factName="total-size-files" value='#[vars."total-size-files"]' />
+			</custom-metrics:facts>
+		</custom-metrics:send>
+		<choice doc:name="Choice" doc:id="aaeb5418-2779-40f2-8cca-39cff041a1b0">
+			<when expression='#[vars."total-error-files" &gt; 0]'>
+				<set-payload value="Error" doc:name="Set Response" doc:id="bb01e31c-3532-4e43-9934-204e1571b78a" />
+			</when>
+			<otherwise>
+				<set-payload value="Success" doc:name="Set Response" doc:id="28fb3f33-f190-462a-bd38-d3b8d2913477" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="sftp-to-aws-for-each" doc:id="af6e26e2-0e19-4768-8d38-a4824dc07147" >
+		<foreach collection="#[vars.listFiles]">
+			<sftp:read doc:name="Read" doc:id="12a6b939-a528-40a2-bfd8-2d2bca085b2b" config-ref="SFTP_Source_Config" path="#[vars.listFiles[vars.counter - 1].attributes.path]" />
+			<choice>
+				<when expression="#[not attributes.directory]">
+					<ee:transform doc:name="File Transfer Internal Variables" doc:id="7405ed1a-b1ac-400e-9b89-13132b2f773d">
+						<ee:variables>
+							<ee:set-variable variableName="object-name" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.listFiles[vars.counter - 1].attributes.fileName]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<s3:put-object doc:name="Put Object" doc:id="78bbe145-3c73-41e5-95cd-2f628c7882fd" bucketName='#[vars."target-aws-bucketname"]' key='#[vars."object-name"]' config-ref="Amazon_S3_Configuration"/>
+					<set-variable value='#[vars."total-success-files" + 1]' doc:name="Set Total Success Files" doc:id="c38a278f-c5a1-42e8-9b55-4f687e5cc174" variableName="total-success-files"/>
+					<set-variable value='#[vars."total-input-files" + 1]' doc:name="Set Total Input Files" doc:id="4c3d52eb-a3b5-4a44-949d-8cc7ed09423c" variableName="total-input-files"/>
+					<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars."total-size-files" + (sizeOf(payload.^raw)/1000000)]' doc:name="Set Total Files Size" doc:id="b3a34f46-fc8a-45fa-99ec-d4650e1f11cc" variableName="total-size-files"/>
+        </when>
+    </choice>
+</foreach>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="eb8aaea3-599c-4209-8e4d-ed9719f0fe0a" >
+				<set-variable value='#[vars."total-input-files" + 1]' doc:name="Set Total Input Files Count" doc:id="97e94455-2627-417a-b1f9-f2fd1fb6b71a" variableName="total-input-files"/>
+				<set-variable value='#[vars."total-error-files" + 1]' doc:name="Set Total Error Files" doc:id="061ab010-674f-4816-8af5-8661f54014de" variableName="total-error-files"/>
+				<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars."total-size-files" + (sizeOf(payload.^raw)/1000000)]' doc:name="Set Total File Size" doc:id="5357c3ad-e04a-4f11-8a00-12642e9c36e0" variableName="total-size-files"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>	
+</mule>

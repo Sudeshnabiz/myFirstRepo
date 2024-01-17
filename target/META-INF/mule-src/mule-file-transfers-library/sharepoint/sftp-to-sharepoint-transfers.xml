@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:sharepoint="http://www.mulesoft.org/schema/mule/sharepoint"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:custom-metrics="http://www.mulesoft.org/schema/mule/custom-metrics" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/custom-metrics http://www.mulesoft.org/schema/mule/custom-metrics/current/mule-custom-metrics.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/sharepoint http://www.mulesoft.org/schema/mule/sharepoint/current/mule-sharepoint.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+
+	<flow name="sftp-to-sharepoint-main" doc:id="29081cd2-9d61-47a7-bba9-bfc9aa363ba7">
+		<vm:listener doc:name="Listener" doc:id="6f508962-6a02-433a-9d6a-8ac7e822bc8b" queueName="vm-sftp-to-sharepoint" config-ref="VM_Config"/>
+		<ee:transform doc:name="SFTP to SharePoint Vars Initialization" doc:id="184a8fd9-6ed2-4a24-bc4d-4910731c8cfd">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="archive-location"><![CDATA[%dw 2.0
+output application/java
+---
+payload."archive-location"]]></ee:set-variable>
+				<ee:set-variable variableName="interface-name"><![CDATA[%dw 2.0
+output application/java
+---
+payload."interface-name"]]></ee:set-variable>
+				<ee:set-variable variableName="error-location"><![CDATA[%dw 2.0
+output application/java
+---
+payload."error-location"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-host" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-host"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-port" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-port"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-username" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-username"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-password" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-password"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-file-pattern" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-file-pattern"]]></ee:set-variable>
+				<ee:set-variable variableName="source-sftp-path" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-sftp-path"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-site" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-site"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-folder" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-folder"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-clientid" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-clientid"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-tokenurl" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-tokenurl"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-scope" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-scope"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-keystorealias" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-keystorealias"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-keystorepath" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-keystorepath"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-keystorepassword" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-keystorepassword"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sharepoint-keystoretype" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sharepoint-keystoretype"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="6e91ba8d-14b4-46ec-a57e-639df0a92936" name="sftp-to-sharepoint-transfersFlow"/>
+		<sftp:list doc:name="List" doc:id="dab6caa8-f38c-40ac-8fd1-3f8239498b6d" config-ref="SFTP_Source_Config" directoryPath='#[vars."source-sftp-path"]' target="listFiles">
+			<sftp:matcher directories="EXCLUDE" />
+		</sftp:list>
+		<ee:transform doc:name="Initialize vars used for metrics" doc:id="d7c39840-6c6f-4e64-83f8-c3642919fd27">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="total-input-files"><![CDATA[%dw 2.0
+				output application/java
+				---
+				payload.size
+				]]></ee:set-variable>
+				<ee:set-variable variableName="total-success-files"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+				<ee:set-variable variableName="total-error-files"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="For Each File - Flow Reference" doc:id="f7bfaff3-6cef-456a-9177-38f1df5efc63" name="sftp-to-sharepoint-for-each" />
+		<custom-metrics:send doc:name="Send File Transfer Metrics" doc:id="17a1cc8b-e8ac-457c-af0f-87c127782f1e" metricName="file_transfers_custom_metric">
+			<custom-metrics:dimensions>
+				<custom-metrics:dimension dimensionName="interface-name" value='#[vars."interface-name"]' />
+			</custom-metrics:dimensions>
+			<custom-metrics:facts>
+				<custom-metrics:fact factName="total-input-files" value='#[vars."total-input-files"]' />
+						<custom-metrics:fact factName="total-error-files" value='#[vars."total-error-files"]' />
+				<custom-metrics:fact factName="total-success-files" value='#[vars."total-success-files"]' />
+			</custom-metrics:facts>
+		</custom-metrics:send>
+		<choice doc:name="Choice" doc:id="aaeb5418-2779-40f2-8cca-39cff041a1b0">
+			<when expression='#[vars."total-error-files" &gt; 0]'>
+				<set-payload value="Error" doc:name="Set Response" doc:id="bb01e31c-3532-4e43-9934-204e1571b78a" />
+			</when>
+			<otherwise>
+				<set-payload value="Success" doc:name="Set Response" doc:id="28fb3f33-f190-462a-bd38-d3b8d2913477" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="sftp-to-sharepoint-transfersFlow" doc:id="5b89fb04-40a3-4084-81e3-c9eb0c12675b" >
+		<logger level="INFO" doc:name="Logger" doc:id="f059703b-c970-452d-83e9-5945896c9697" message='#[vars."target-sharepoint-site"]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="ecedfd47-c98b-4121-add4-582528ae430e" message='#[vars."target-sharepoint-clientid"]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="f60708be-3e2d-4795-b804-da39b0093a35" message='#[vars."target-sharepoint-tokenurl"]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="570c36c2-9b38-4495-a558-002579071c20" message='#[vars."target-sharepoint-scope"]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="c5768544-eee5-4984-bacb-b6f608dede0c" message='#[vars."target-sharepoint-keystorealias"]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="db26e37b-a481-46e5-9622-d05b2f21e068" message='#[vars."target-sharepoint-keystorepath"]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="ad4046b8-30b9-4882-ae44-f7319c7dba12" message='#[vars."target-sharepoint-keystorepassword"]'/>
+	</flow>
+	<flow name="sftp-to-sharepoint-for-each" doc:id="af6e26e2-0e19-4768-8d38-a4824dc07147" >
+		<foreach collection="#[vars.listFiles]">
+			<sftp:read doc:name="Read" doc:id="12a6b939-a528-40a2-bfd8-2d2bca085b2b" config-ref="SFTP_Source_Config" path="#[vars.listFiles[vars.counter - 1].attributes.path]" />
+			<choice>
+				<when expression="#[not attributes.directory]">
+					<ee:transform doc:name="File Transfer Internal Variables" doc:id="7405ed1a-b1ac-400e-9b89-13132b2f773d">
+						<ee:variables>
+							<ee:set-variable variableName="sharepoint-filename"><![CDATA[%dw 2.0
+output application/java
+---
+vars."target-sharepoint-folder" ++ attributes.fileName]]></ee:set-variable>
+							<ee:set-variable variableName="source-file"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.path]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<sharepoint:file-add doc:name="Upload File to Sharepoint" doc:id="4e61a824-1a34-4045-9dd7-4c67631233d0" fileServerRelativeUrl='#[vars."sharepoint-filename"]' overwrite="true" config-ref="Sharepoint_Sharepoint_online">
+			<sharepoint:file-content-stream><![CDATA[#[payload]]]></sharepoint:file-content-stream>
+		</sharepoint:file-add>
+					<set-variable value='#[vars."total-success-files" + 1]' doc:name="Total Success Files" doc:id="ff945370-0313-48a1-8ee5-6b3fc8de2232" variableName="total-success-files" />
+        </when>
+    </choice>
+</foreach>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="eb8aaea3-599c-4209-8e4d-ed9719f0fe0a" >
+				<set-variable value='#[vars."total-error-files" + 1]' doc:name="Total Error Files" doc:id="76e270b6-30fa-44de-a142-b95f6be53ddf" variableName="total-success-files" />
+				<file:move doc:name="Move File to Error Location" doc:id="cfa6af87-ff7f-4709-aedc-2c7cae2cecf5" sourcePath='#[vars."source-file"]' targetPath='#[vars."error-location"]' overwrite="true" />
+			</on-error-continue>
+		</error-handler>
+	</flow>	
+</mule>

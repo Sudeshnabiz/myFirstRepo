@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:smb="http://www.mulesoft.org/schema/mule/smb" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:sharepoint="http://www.mulesoft.org/schema/mule/sharepoint" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:custom-metrics="http://www.mulesoft.org/schema/mule/custom-metrics" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/custom-metrics http://www.mulesoft.org/schema/mule/custom-metrics/current/mule-custom-metrics.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/sharepoint http://www.mulesoft.org/schema/mule/sharepoint/current/mule-sharepoint.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/current/mule-smb.xsd">
+
+	<flow name="networkdrive-to-sftp-main" doc:id="29081cd2-9d61-47a7-bba9-bfc9aa363ba7">
+		<vm:listener doc:name="Listener" doc:id="6f508962-6a02-433a-9d6a-8ac7e822bc8b" queueName="vm-networkdrive-to-sharepoint" config-ref="VM_Config"/>
+		<ee:transform doc:name="Shared Network Drive to SFTP Vars Initialization" doc:id="184a8fd9-6ed2-4a24-bc4d-4910731c8cfd">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="archive-location"><![CDATA[%dw 2.0
+output application/java
+---
+payload."archive-location"]]></ee:set-variable>
+				<ee:set-variable variableName="interface-name"><![CDATA[%dw 2.0
+output application/java
+---
+payload."interface-name"]]></ee:set-variable>
+				<ee:set-variable variableName="error-location"><![CDATA[%dw 2.0
+output application/java
+---
+payload."error-location"]]></ee:set-variable>
+				<ee:set-variable variableName="source-networkdrive-host" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-networkdrive-host"]]></ee:set-variable>
+				<ee:set-variable variableName="source-networkdrive-share" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-networkdrive-share"]]></ee:set-variable>
+				<ee:set-variable variableName="source-networkdrive-username" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-networkdrive-username"]]></ee:set-variable>
+				<ee:set-variable variableName="source-networkdrive-password" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-networkdrive-password"]]></ee:set-variable>
+				<ee:set-variable variableName="source-networkdrive-folder" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."source-networkdrive-folder"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-host" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-host"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-port" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-port"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-username" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-username"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-password" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-password"]]></ee:set-variable>
+				<ee:set-variable variableName="target-sftp-path" ><![CDATA[%dw 2.0
+output application/java
+---
+payload."target-sftp-path"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<smb:directory-list doc:name="Directory List" doc:id="b1adc212-5867-4d4e-b1b5-5f44bc19bea0" config-ref="SMB_Connector_Config" dirName='#[vars."source-networkdrive-folder"]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="074b6425-5164-4f6b-9138-244ed0efacbb" message="#[payload]"/>
+		<ee:transform doc:name="Initialize vars used for metrics" doc:id="d7c39840-6c6f-4e64-83f8-c3642919fd27">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="total-input-files"><![CDATA[%dw 2.0
+output application/java
+---
+0				]]></ee:set-variable>
+				<ee:set-variable variableName="total-success-files"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+				<ee:set-variable variableName="total-error-files"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+				<ee:set-variable variableName="total-size-files" ><![CDATA[%dw 2.0
+output application/json
+---
+0]]></ee:set-variable>
+				<ee:set-variable variableName="listFiles" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="For Each File - Flow Reference" doc:id="f7bfaff3-6cef-456a-9177-38f1df5efc63" name="networkdrive-to-sftp-for-each" />
+		<custom-metrics:send doc:name="Send File Transfer Metrics" doc:id="ae25b5d3-2e23-4aa4-bf6d-70e605ab917d" metricName="file_transfers_custom_metric">
+			<custom-metrics:dimensions>
+				<custom-metrics:dimension dimensionName="interface_name" value='#[vars."interface-name"]' />
+			</custom-metrics:dimensions>
+			<custom-metrics:facts>
+				<custom-metrics:fact factName="total-input-files" value='#[vars."total-input-files"]' />
+						<custom-metrics:fact factName="total-error-files" value='#[vars."total-error-files"]' />
+				<custom-metrics:fact factName="total-success-files" value='#[vars."total-success-files"]' />
+				<custom-metrics:fact factName="total-size-files" value='#[vars."total-size-files"]' />
+			</custom-metrics:facts>
+		</custom-metrics:send>
+		<choice doc:name="Choice" doc:id="aaeb5418-2779-40f2-8cca-39cff041a1b0">
+			<when expression='#[vars."total-error-files" &gt; 0]'>
+				<set-payload value="Error" doc:name="Set Response" doc:id="bb01e31c-3532-4e43-9934-204e1571b78a" />
+			</when>
+			<otherwise>
+				<set-payload value="Success" doc:name="Set Response" doc:id="28fb3f33-f190-462a-bd38-d3b8d2913477" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="networkdrive-to-sftp-for-each" doc:id="af6e26e2-0e19-4768-8d38-a4824dc07147" >
+		<foreach collection="#[vars.listFiles]">
+			<smb:file-read doc:name="File Read" doc:id="2fab75c7-74ec-420c-bea7-4ae700e93517" config-ref="SMB_Connector_Config" dirName='#[vars."source-networkdrive-folder"]' fileName="#[payload.Filename]" target="fileContent"/>
+			<ee:transform doc:name="File Transfer Internal Variables" doc:id="7405ed1a-b1ac-400e-9b89-13132b2f773d">
+						<ee:variables>
+							<ee:set-variable variableName="target-path"><![CDATA[%dw 2.0
+output application/java
+---
+vars."target-sftp-path" ++ payload.Filename]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+			<sftp:write doc:name="Write" doc:id="9f70799d-cfb6-4679-9cb5-871603f6efce" config-ref="SFTP_Target_Config" path='#[vars."target-path"]' >
+				<sftp:content ><![CDATA[#[vars.fileContent]]]></sftp:content>
+			</sftp:write>
+			<set-variable value='#[vars."total-success-files" + 1]' doc:name="Set Total Success Files" doc:id="efef30a5-53ad-47ca-b23c-ea2621f2da35" variableName="total-success-files" />
+			<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars."total-size-files" + (sizeOf(payload.^raw)/1000000)]' doc:name="Set Total Files Size" doc:id="60a1c648-df40-430f-9872-18dcc74680ea" variableName="total-size-files" />
+			<set-variable value='#[vars."total-input-files" + 1]' doc:name="Set Total Input Files" doc:id="658a278c-d963-4319-ac15-e8720a626513" variableName="total-input-files" />
+</foreach>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="eb8aaea3-599c-4209-8e4d-ed9719f0fe0a" >
+				<set-variable value='#[vars."total-input-files" + 1]' doc:name="Set Total Input Files Count" doc:id="e7ac540c-db44-4b17-97a8-a976af81fa20" variableName="total-input-files"/>
+				<set-variable value='#[vars."total-error-files" + 1]' doc:name="Set Total Error Files" doc:id="260abc1b-c078-4b0f-b718-da8d6f20f4f0" variableName="total-error-files"/>
+				<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars."total-size-files" + (sizeOf(payload.^raw)/1000000)]' doc:name="Set Total File Size" doc:id="431a6a25-7170-4464-b0fc-01f8b90c987f" variableName="total-size-files"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>	
+</mule>

@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_af6e26e2_0e19_4768_8d38_a4824dc07147_Output_Variables_source_sftp_username = Any
+
